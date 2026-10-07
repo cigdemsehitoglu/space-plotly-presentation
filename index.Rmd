@@ -1,0 +1,197 @@
+---
+title: "Beyond Earth: Interactive Exploration of the Solar System"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    css: [default, default-fonts, "custom.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: "16:9"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(plotly)
+library(dplyr)
+library(htmltools)
+```
+
+class: center, middle, inverse
+
+# Beyond Earth
+## Interactive Exploration of the Solar System
+
+### Created with R + Plotly
+
+**Date:** `r format(Sys.Date(), "%B %d, %Y")`
+
+---
+
+## Why This Matters
+
+Space exploration is no longer science fiction.  
+
+With interactive visualizations we can:
+
+- Compare planetary characteristics in real time  
+- Understand scale and relationships  
+- Spark curiosity about our cosmic neighborhood  
+
+This presentation uses **Plotly** to make data exploration feel like a mission control dashboard.
+
+---
+
+## The Dataset
+
+We will explore key properties of the planets in our Solar System:
+
+| Planet     | Distance from Sun (AU) | Radius (Earth = 1) | Mass (Earth = 1) | Moons | Type      |
+|------------|------------------------|--------------------|------------------|-------|-----------|
+| Mercury    | 0.39                   | 0.38               | 0.055            | 0     | Terrestrial |
+| Venus      | 0.72                   | 0.95               | 0.815            | 0     | Terrestrial |
+| Earth      | 1.00                   | 1.00               | 1.000            | 1     | Terrestrial |
+| Mars       | 1.52                   | 0.53               | 0.107            | 2     | Terrestrial |
+| Jupiter    | 5.20                   | 11.21              | 317.8            | 95    | Gas Giant |
+| Saturn     | 9.58                   | 9.45               | 95.2             | 146   | Gas Giant |
+| Uranus     | 19.22                  | 4.01               | 14.5             | 28    | Ice Giant |
+| Neptune    | 30.05                  | 3.88               | 17.1             | 16    | Ice Giant |
+
+---
+
+## Interactive Solar System Explorer
+
+Hover over any point to see detailed information.  
+You can zoom, pan, and explore relationships between distance, size, and mass.
+
+```{r plotly-plot, fig.width=10, fig.height=6}
+planets <- data.frame(
+  Planet = c("Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"),
+  Distance_AU = c(0.39, 0.72, 1.00, 1.52, 5.20, 9.58, 19.22, 30.05),
+  Radius_Earth = c(0.38, 0.95, 1.00, 0.53, 11.21, 9.45, 4.01, 3.88),
+  Mass_Earth = c(0.055, 0.815, 1.000, 0.107, 317.8, 95.2, 14.5, 17.1),
+  Moons = c(0, 0, 1, 2, 95, 146, 28, 16),
+  Type = c("Terrestrial", "Terrestrial", "Terrestrial", "Terrestrial",
+           "Gas Giant", "Gas Giant", "Ice Giant", "Ice Giant"),
+  Color = c("#A9A9A9", "#E6C35C", "#4A90D9", "#E27B58",
+            "#E8A87C", "#F4D35E", "#7EC8E3", "#4169E1")
+)
+
+p <- plot_ly(
+  data = planets,
+  x = ~Distance_AU,
+  y = ~Radius_Earth,
+  size = ~Mass_Earth,
+  color = ~Type,
+  colors = c("Terrestrial" = "#4A90D9", "Gas Giant" = "#E8A87C", "Ice Giant" = "#7EC8E3"),
+  text = ~paste0(
+    "<b>", Planet, "</b><br>",
+    "Distance: ", Distance_AU, " AU<br>",
+    "Radius: ", Radius_Earth, " × Earth<br>",
+    "Mass: ", Mass_Earth, " × Earth<br>",
+    "Moons: ", Moons
+  ),
+  hoverinfo = "text",
+  type = "scatter",
+  mode = "markers",
+  marker = list(
+    sizemode = "diameter",
+    opacity = 0.85,
+    line = list(width = 1, color = "#333")
+  )
+) %>%
+  layout(
+    title = list(
+      text = "Solar System: Distance vs Size (bubble size = Mass)",
+      font = list(size = 18, color = "#1a1a2e")
+    ),
+    xaxis = list(
+      title = "Distance from Sun (Astronomical Units)",
+      gridcolor = "#e0e0e0",
+      zeroline = FALSE
+    ),
+    yaxis = list(
+      title = "Radius (Earth = 1)",
+      gridcolor = "#e0e0e0",
+      zeroline = FALSE
+    ),
+    paper_bgcolor = "#f8f9fa",
+    plot_bgcolor = "#ffffff",
+    legend = list(
+      title = list(text = "Planet Type"),
+      bgcolor = "rgba(255,255,255,0.8)"
+    ),
+    hovermode = "closest",
+    margin = list(l = 60, r = 40, t = 60, b = 60)
+  ) %>%
+  config(displayModeBar = TRUE, displaylogo = FALSE)
+
+p
+```
+
+---
+
+## Key Insights from the Interactive Plot
+
+- **Terrestrial planets** (blue) cluster close to the Sun and are relatively small.  
+- **Gas giants** (orange) dominate in both size and mass — Jupiter is a true heavyweight.  
+- **Ice giants** (cyan) sit far out, with moderate size but still impressive mass.  
+- Bubble size clearly shows that mass does not scale linearly with radius (density differences matter!).
+
+Try hovering and zooming — the interactivity reveals patterns that static charts hide.
+
+---
+
+## Bonus: Mass vs Number of Moons
+
+Another perspective on the data:
+
+```{r plotly-plot2, fig.width=10, fig.height=5}
+p2 <- plot_ly(
+  data = planets,
+  x = ~Mass_Earth,
+  y = ~Moons,
+  color = ~Type,
+  colors = c("Terrestrial" = "#4A90D9", "Gas Giant" = "#E8A87C", "Ice Giant" = "#7EC8E3"),
+  text = ~paste0("<b>", Planet, "</b><br>Mass: ", Mass_Earth, " × Earth<br>Moons: ", Moons),
+  hoverinfo = "text",
+  type = "scatter",
+  mode = "markers+text",
+  textposition = "top center",
+  marker = list(size = 16, opacity = 0.9)
+) %>%
+  layout(
+    title = "Planetary Mass vs Number of Known Moons",
+    xaxis = list(title = "Mass (Earth = 1)", type = "log"),
+    yaxis = list(title = "Number of Moons"),
+    paper_bgcolor = "#f8f9fa",
+    plot_bgcolor = "#ffffff"
+  )
+
+p2
+```
+
+---
+
+class: center, middle
+
+## Conclusion
+
+Interactive visualizations turn numbers into **stories**.
+
+Whether you are a student, researcher, or space enthusiast, tools like **R + Plotly** let you explore the universe from your browser.
+
+---
+
+class: center, middle, inverse
+
+# Thank You
+
+### Explore. Zoom. Discover.
+
+**Created on:** `r format(Sys.Date(), "%Y-%m-%d")`
+
+*Push this project to GitHub and enable GitHub Pages to share it with the world.*
